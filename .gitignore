@@ -197,5 +197,7 @@ cython_debug/
 artifacts/*
 people/*
 create_df.py
-*.csv
+# *.csv
+people.csv
 *:Zone.Identifier
+delete*

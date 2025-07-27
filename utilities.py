@@ -42,6 +42,17 @@ def calculate_age_from_non_date(dob_input) -> int | None:
     except Exception:
         return None
 
+    """
+    "30-AUG-1978 00:00:00.000" ✅
+
+    "30-Aug-1978 00:00:00.000" ✅
+    """
+
+
+"""
+Yes — you can parse "30-AUG-1978 00:00:00.000" directly in Python using strptime() by transforming the input with .upper() or .title() only for the month part, but unfortunately strptime() itself does not accept uppercase %b ("AUG" fails, "Aug" works). So manual case normalization is required unless:
+"""
+
 
 def calculate_age_from_date(dob: date) -> int | None:
     """
