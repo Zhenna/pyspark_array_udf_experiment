@@ -4,54 +4,73 @@ from typing import Iterable, List, Optional
 from datetime import date, datetime
 import pandas as pd
 
+from datetime import datetime
+from typing import Optional
 
-def calculate_age_from_non_date(dob_input) -> int | None:
+
+def calculate_age_from_date_numeric(dob_input: float | int) -> Optional[int]:
     """
-    Accepts various DOB formats:
-    - date or datetime object
-    - pandas.Timestamp
-    - string or integer in YYYYMMDD or DDMMYYYY format
+    Parses numeric date of birth into a date and calculates age.
+    Accepts float or integer in formats:
+      - YYYYMMDD (e.g. 19801230)
+      - DDMMYYYY (e.g. 30121980)
+
+    Parameters:
+        dob_input (float | int): Date of birth as a numeric value.
 
     Returns:
-        int | None: Age in years or None if invalid or future date
+        Optional[int]: Age in years or None if invalid.
     """
     try:
-        if dob_input is None or pd.isna(dob_input):
+        if dob_input is None:
             return None
 
-        # Handle datetime-like objects
-        if isinstance(dob_input, (pd.Timestamp, datetime)):
-            dob = dob_input.date()
-        elif isinstance(dob_input, date):
-            dob = dob_input
-        else:
-            # Try parsing as integer or string
-            dob_str = str(int(dob_input)).zfill(
-                8
-            )  # e.g., 19800531 -> '19800531', pad if needed
+        # Convert to int to drop any .0 from float
+        # dob_str = str(int(float(dob_input))).zfill(8)
+        dob_str = str(int(dob_input)).zfill(8)
 
-            # Try YYYYMMDD format first
-            try:
-                dob = datetime.strptime(dob_str, "%Y%m%d").date()
-            except ValueError:
-                # Try DDMMYYYY format next
-                dob = datetime.strptime(dob_str, "%d%m%Y").date()
+        try:
+            # Try YYYYMMDD
+            dob = datetime.strptime(dob_str, "%Y%m%d").date()
+        except ValueError:
+            # Try DDMMYYYY
+            dob = datetime.strptime(dob_str, "%d%m%Y").date()
 
         return calculate_age_from_date(dob)
 
     except Exception:
         return None
 
+
+def calculate_age_from_string(dob_str: str) -> Optional[int]:
     """
-    "30-AUG-1978 00:00:00.000" ✅
+    Parses a date string and calculates age. Supports:
+      - 'YYYY-MM-DD'
+      - 'DDMMYYYY' (with optional leading zero padding)
 
-    "30-Aug-1978 00:00:00.000" ✅
+    Parameters:
+        dob_str (str): Date of birth string.
+
+    Returns:
+        Optional[int]: Age in years or None if parsing fails.
     """
+    if not isinstance(dob_str, str):
+        return None
 
+    dob_str = dob_str.strip()
 
-"""
-Yes — you can parse "30-AUG-1978 00:00:00.000" directly in Python using strptime() by transforming the input with .upper() or .title() only for the month part, but unfortunately strptime() itself does not accept uppercase %b ("AUG" fails, "Aug" works). So manual case normalization is required unless:
-"""
+    # Pad with leading zeros if numeric and less than 8 chars
+    if dob_str.isdigit() and len(dob_str) < 8:
+        dob_str = dob_str.zfill(8)
+
+    try:
+        if "-" in dob_str:
+            dob = datetime.strptime(dob_str, "%Y-%m-%d").date()
+        else:
+            dob = datetime.strptime(dob_str, "%d%m%Y").date()
+        return calculate_age_from_date(dob)
+    except Exception:
+        return None
 
 
 def calculate_age_from_date(dob: date) -> int | None:
@@ -78,15 +97,18 @@ def calculate_age_from_date(dob: date) -> int | None:
 
 def calculate_ages_from_date_array(dobs: Iterable[date]) -> List[Optional[int]]:
     """
-    Applies `calculate_age_from_date` to each item in an iterable of dates.
+    Applies `calculate_age_from_date` to each item in an iterable,
+    only if it is a non-null instance of `date`.
 
     Parameters:
         dobs (Iterable[date]): A list or iterable of datetime.date objects.
 
     Returns:
-        List[Optional[int]]: A list of calculated ages or None for invalid/future dates.
+        List[Optional[int]]: A list of calculated ages or None for invalid inputs.
     """
-    return [calculate_age_from_date(dob) if dob else None for dob in dobs]
+    return [
+        calculate_age_from_date(dob) if isinstance(dob, date) else None for dob in dobs
+    ]
 
 
 def calculate_ages_from_string_array(records: List[str]) -> List[Optional[str]]:
