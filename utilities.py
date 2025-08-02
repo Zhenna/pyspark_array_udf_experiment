@@ -1,11 +1,6 @@
 from pyspark.sql import SparkSession, DataFrame
 from typing import Iterable, List, Optional
-
 from datetime import date, datetime
-import pandas as pd
-
-from datetime import datetime
-from typing import Optional
 
 
 def calculate_age_from_date_numeric(dob_input: float | int) -> Optional[int]:
@@ -25,8 +20,6 @@ def calculate_age_from_date_numeric(dob_input: float | int) -> Optional[int]:
         if dob_input is None:
             return None
 
-        # Convert to int to drop any .0 from float
-        # dob_str = str(int(float(dob_input))).zfill(8)
         dob_str = str(int(dob_input)).zfill(8)
 
         try:

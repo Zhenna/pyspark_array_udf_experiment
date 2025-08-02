@@ -1,5 +1,7 @@
 # pyspark_array_udf_experiment
 
+Please [follow this post](https://medium.com/@luzhenna/pyspark-data-wrangling-from-noob-to-hardcore-udf-for-date-array-columns-33db2c5903ce) for a step-by-step guide.
+
 ### Pre-requisites
 
 Please make sure you have Java installed. PySpark needs Java to launch the JVM backend.

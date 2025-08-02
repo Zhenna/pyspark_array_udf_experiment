@@ -55,26 +55,30 @@ def apply_udf_by_typedf(
     Returns:
         DataFrame: Updated DataFrame with transformed columns.
     """
-    for col in columns:
-        col_type = df.schema[col].dataType
+    for col_name in columns:
+        col_type = df.schema[col_name].dataType
 
-        for dtype, udf_func in udf_mapping.items():
-            is_array_match = (
-                isinstance(dtype, ArrayType)
-                and isinstance(col_type, ArrayType)
-                and col_type.elementType == dtype.elementType
-            )
-            is_exact_match = isinstance(col_type, type(dtype))
-
-            if is_array_match or is_exact_match:
+        matched = False
+        for dtype_key, udf_func in udf_mapping.items():
+            if isinstance(dtype_key, ArrayType) and isinstance(col_type, ArrayType):
+                if type(col_type.elementType) == type(dtype_key.elementType):
+                    print(
+                        f"✅ Transforming array column: '{col_name}' | actual type: {col_type} | matched type: {dtype_key}"
+                    )
+                    df = df.withColumn(col_name, udf_func(col_name))
+                    matched = True
+                    break
+            elif type(col_type) == type(dtype_key):
                 print(
-                    f"✅ Transforming column: '{col}' | actual type: {col_type} | matched type: {dtype}"
+                    f"✅ Transforming column: '{col_name}' | actual type: {col_type} | matched type: {dtype_key}"
                 )
-                df = df.withColumn(col, udf_func(col))
+                df = df.withColumn(col_name, udf_func(col_name))
+                matched = True
                 break
-        else:
+
+        if not matched:
             print(
-                f"⚠️ No matching UDF found for column: '{col}' | actual type: {col_type}"
+                f"⚠️ No matching UDF found for column: '{col_name}' | actual type: {col_type}"
             )
 
     return df
@@ -93,7 +97,7 @@ if __name__ == "__main__":
             "dob_yyyymmdd",
             "dob_ddmmyyyy",
             "birthday_list",
-            # "birthday_string_list",
+            "birthday_string_list",
         ],
         udf_mapping=UDF_MAPPING,
     )
